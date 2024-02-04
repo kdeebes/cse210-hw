@@ -1,86 +1,110 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
-namespace ScriptureMemorizer
+class Verse
 {
-    class Program
+    public string Text { get; private set; }
+    public List<string> Words { get; private set; }
+
+    public Verse(string text)
     {
-        static void Main(string[] args)
-        {
-            // Create a scripture with both reference and text
-            Scripture scripture = new Scripture("2 Corinthians 12:9", "And he said unto me, My grace is sufficient for thee: for my strength is made perfect in weakness. Most gladly therefore will I rather glory in my infirmities, that the power of Christ may rest upon me.");
-
-            // Display the initial scripture
-            Console.Clear();
-            
-            DisplayScripture(scripture);
-
-            // Prompt the user until all words are hidden or they quit
-            while (true)
-            {
-                Console.Write("Press Enter to continue or type quit: ");
-                string input = Console.ReadLine();
-
-                if (input.ToLower() == "quit")
-                {
-                    break;
-                }
-
-                if (scripture.HideRandomWords())
-                {
-                    Console.Clear();
-                    DisplayScripture(scripture);
-                }
-                else
-                {
-                    Console.WriteLine("All words have been hidden!");
-                    break;
-                }
-            }
-        }
-
-        static void DisplayScripture(Scripture scripture)
-        {
-            Console.WriteLine(scripture.Reference);
-            Console.WriteLine(scripture.Text);
-            Console.WriteLine();
-        }
+        Text = text.Trim();
+        Words = text.Split(' ').ToList();
     }
 
-    class Scripture
+    public override string ToString() => Text;
+
+    public List<string> GetHiddenWords()
     {
-        public string Reference { get; }
-        public string Text { get; private set; }
-        public List<string> HiddenWords { get; } = new List<string>();
-
-        public Scripture(string reference, string text)
+        List<string> hiddenWords = new List<string>();
+        foreach (string word in Words)
         {
-            Reference = reference;
-            Text = text;
-        }
-
-        public bool HideRandomWords()
-        {
-            string[] words = Text.Split(' ');
-            Random random = new Random();
-
-            int wordsToHide = 2; // Adjust as needed
-            for (int i = 0; i < wordsToHide; i++)
+            if (!hiddenWords.Contains(word) && new Random().Next(2) == 0)
             {
-                int wordIndex = random.Next(0, words.Length);
-                string wordToHide = words[wordIndex];
-
-                // Only hide words that haven't been hidden yet (stretch challenge)
-                if (!HiddenWords.Contains(wordToHide))
-                {
-                    HiddenWords.Add(wordToHide);
-                    words[wordIndex] = "__________"; // Replace with hidden word marker
-                }
+                hiddenWords.Add(word);
             }
+        }
+        return hiddenWords;
+    }
+}
 
-            Text = string.Join(" ", words);
+class ScriptureReference
+{
+    public string Book { get; private set; }
+    public int Chapter { get; private set; }
+    public int StartVerse { get; private set; }
+    public int EndVerse { get; private set; }
 
-            return HiddenWords.Count < words.Length; // Return true if there are still words to hide
+    public ScriptureReference(string book, int chapter, int startVerse = 0, int endVerse = 0)
+    {
+        Book = book;
+        Chapter = chapter;
+        StartVerse = startVerse > 0 ? startVerse : chapter;
+        EndVerse = endVerse > 0 ? endVerse : chapter;
+    }
+
+    public override string ToString()
+    {
+        return StartVerse == EndVerse
+            ? $"{Book} {Chapter}:{StartVerse}"
+            : $"{Book} {Chapter}:{StartVerse}-{EndVerse}";
+    }
+}
+
+class Scripture
+{
+    public ScriptureReference Reference { get; private set; }
+    public List<Verse> Verses { get; private set; }
+
+    public Scripture(ScriptureReference reference, List<Verse> verses)
+    {
+        Reference = reference;
+        Verses = verses;
+    }
+        
+    public void Display()
+    {
+        Console.WriteLine($"\n{Reference}");
+        Verses.ForEach(verse => Console.WriteLine(verse));
+        Console.Write("Press enter to continue or type 'quit' to finish: ");
+    }
+    
+    public void HideWords()
+    {
+        Verses.ForEach(verse =>
+        {
+            List<string> hiddenWords = verse.GetHiddenWords();
+            Console.WriteLine(string.Join(" ", verse.Words.Select(w => hiddenWords.Contains(w) ? "_" : w)));
+        });
+    }
+}
+
+class Program
+{
+    static void Main(string[] args)
+    {
+        ScriptureReference reference = new ScriptureReference("Galatians",6, 9);
+        List<Verse> verses = new List<Verse>
+        {
+            new Verse("Let us not become weary in doing good, for at the proper time we will reap a harvest if we do not give up.")
+            
+        };
+        
+        Scripture scripture = new Scripture(reference, verses);
+
+        while (true)
+        {
+            scripture.Display();
+            string userInput = Console.ReadLine().ToLower();
+            if (userInput == "quit")
+            {
+                break;
+            }
+            else
+            {
+                scripture.HideWords();
+            }
         }
     }
 }
