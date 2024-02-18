@@ -1,3 +1,8 @@
+
+//Name: Kerryann Deebes
+//Class: CSE210
+//Date: 2/18/2024
+
 using System;
 using System.Collections.Generic;
 
@@ -16,7 +21,7 @@ class Program
 
         // Adding comments to each video
         videos[0].AddComment("Commenter 1", "This is a great video!");
-        videos[0].AddComment("Commenter 2", "I loved the content.");
+        videos[0].AddComment("Commenter 2", "Awesome content.");
 
         videos[1].AddComment("Commenter 3", "Interesting video!");
         videos[1].AddComment("Commenter 4", "Could be better.");
